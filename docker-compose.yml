@@ -1,0 +1,15 @@
+name: agent-doc
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
