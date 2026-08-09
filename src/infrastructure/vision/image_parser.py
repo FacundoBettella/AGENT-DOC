@@ -3,7 +3,7 @@ from pathlib import Path
 
 from openai import APIError, APITimeoutError, RateLimitError
 
-from src.infrastructure.openai_client import get_openai_client
+from src.infrastructure.vision.openai_client import get_openai_client
 
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 VISION_MODEL = "gpt-4o"

@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from src.config import get_settings
-from src.infrastructure.langfuse_tracer import get_langfuse_callback_handler
+from src.infrastructure.tracing.langfuse_tracer import get_langfuse_callback_handler
 
 MODEL_NAME = "gpt-4o"
 
