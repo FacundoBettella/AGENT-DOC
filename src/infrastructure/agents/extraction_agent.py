@@ -6,35 +6,9 @@ from pydantic import ValidationError
 from src.config import get_settings
 from src.constants.agents import EXTRACTION_AGENT_NAME
 from src.constants.models import GPT4O
+from src.infrastructure.prompts.prompt_repository import PromptRepository
 from src.infrastructure.tracing.langfuse_tracer import get_langfuse_callback_handler
 from src.models import ContractChangeOutput
-
-SYSTEM_PROMPT = (
-    "Sos un Auditor Legal especializado en control de cambios contractuales. Tu unica "
-    "tarea es identificar, aislar y describir CADA cambio introducido por la enmienda "
-    "respecto al contrato original, usando el mapa contextual del analista senior como "
-    "guia de donde mirar -- no lo cuestiones, usalo como punto de partida.\n\n"
-    "Para cada cambio, distingui explicitamente de que tipo es:\n"
-    "- ADICION: contenido nuevo que no existia en el original\n"
-    "- ELIMINACION: contenido del original que ya no aparece en la enmienda\n"
-    "- MODIFICACION: contenido que existe en ambos pero con valores o texto distinto\n\n"
-    "IMPORTANTE sobre ELIMINACION: las enmiendas legales suelen listar UNICAMENTE las "
-    "clausulas que cambian, sin reproducir el contrato completo. Que una clausula del "
-    "original no aparezca fisicamente en el texto de la enmienda NO significa que fue "
-    "eliminada -- sigue vigente tal cual. Marca ELIMINACION solo cuando haya lenguaje "
-    "explicito de derogacion (ej. 'se elimina la clausula X', 'queda sin efecto', 'se "
-    "deja sin efecto'). Si una clausula del mapa contextual no tiene contraparte en la "
-    "enmienda y no hay lenguaje explicito de derogacion, NO la reportes como cambio.\n\n"
-    "Reporta unicamente cambios que puedas fundamentar con el texto real de ambos "
-    "documentos -- no inventes ni asumas cambios que no esten explicitos en el texto. "
-    "Si una seccion mapeada no tiene diferencias reales, no la reportes.\n\n"
-    "Completa exactamente estos tres campos:\n"
-    "- sections_changed: identificadores de las secciones o clausulas modificadas\n"
-    "- topics_touched: categorias legales o comerciales afectadas (ej. Monto, "
-    "Confidencialidad, Alcance territorial, Vigencia)\n"
-    "- summary_of_the_change: resumen detallado y preciso, distinguiendo adiciones, "
-    "eliminaciones y modificaciones"
-)
 
 USER_PROMPT_TEMPLATE = (
     "MAPA CONTEXTUAL (del analista senior):\n{context_map}\n\n"
@@ -51,13 +25,15 @@ class ExtractionError(RuntimeError):
 class ExtractionAgent:
     NAME = EXTRACTION_AGENT_NAME
 
-    def __init__(self) -> None:
+    def __init__(self, prompt_repository: PromptRepository | None = None) -> None:
+        self._prompt_repository = prompt_repository or PromptRepository()
         settings = get_settings()
         llm = ChatOpenAI(model=GPT4O, temperature=0, api_key=settings.openai_api_key)
         structured_llm = llm.with_structured_output(ContractChangeOutput)
+        system_prompt = self._prompt_repository.get_prompt(self.NAME)
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", SYSTEM_PROMPT),
+                ("system", system_prompt),
                 ("user", USER_PROMPT_TEMPLATE),
             ]
         )

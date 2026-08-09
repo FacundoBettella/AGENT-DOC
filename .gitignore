@@ -5,6 +5,7 @@ __pycache__/
 venv/
 
 .env
+data/prompts.json
 
 .pytest_cache/
 .mypy_cache/
