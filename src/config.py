@@ -18,7 +18,7 @@ class Settings:
     openai_api_key: str
     langfuse_public_key: str
     langfuse_secret_key: str
-    langfuse_host: str
+    langfuse_base_url: str
 
 
 def _require(name: str) -> str:
@@ -35,5 +35,5 @@ def get_settings() -> Settings:
         openai_api_key=_require("OPENAI_API_KEY"),
         langfuse_public_key=_require("LANGFUSE_PUBLIC_KEY"),
         langfuse_secret_key=_require("LANGFUSE_SECRET_KEY"),
-        langfuse_host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+        langfuse_base_url=os.getenv("LANGFUSE_BASE_URL", "https://cloud.langfuse.com"),
     )

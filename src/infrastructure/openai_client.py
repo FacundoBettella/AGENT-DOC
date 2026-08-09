@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from openai import OpenAI
+from langfuse.openai import OpenAI
 
 from src.config import get_settings
 
