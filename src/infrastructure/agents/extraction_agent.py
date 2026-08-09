@@ -4,10 +4,10 @@ from openai import APIError, APITimeoutError, RateLimitError
 from pydantic import ValidationError
 
 from src.config import get_settings
+from src.constants.agents import EXTRACTION_AGENT_NAME
+from src.constants.models import GPT4O
 from src.infrastructure.tracing.langfuse_tracer import get_langfuse_callback_handler
 from src.models import ContractChangeOutput
-
-MODEL_NAME = "gpt-4o"
 
 SYSTEM_PROMPT = (
     "Sos un Auditor Legal especializado en control de cambios contractuales. Tu unica "
@@ -49,9 +49,11 @@ class ExtractionError(RuntimeError):
 
 
 class ExtractionAgent:
+    NAME = EXTRACTION_AGENT_NAME
+
     def __init__(self) -> None:
         settings = get_settings()
-        llm = ChatOpenAI(model=MODEL_NAME, temperature=0, api_key=settings.openai_api_key)
+        llm = ChatOpenAI(model=GPT4O, temperature=0, api_key=settings.openai_api_key)
         structured_llm = llm.with_structured_output(ContractChangeOutput)
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -59,7 +61,8 @@ class ExtractionAgent:
                 ("user", USER_PROMPT_TEMPLATE),
             ]
         )
-        self._chain = prompt | structured_llm
+        chain = prompt | structured_llm
+        self._chain = chain.with_config({"run_name": self.NAME})
 
     def extract_changes(
         self, context_map: str, original_text: str, amendment_text: str

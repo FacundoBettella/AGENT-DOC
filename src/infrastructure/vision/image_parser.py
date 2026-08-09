@@ -3,10 +3,10 @@ from pathlib import Path
 
 from openai import APIError, APITimeoutError, RateLimitError
 
+from src.constants.models import GPT4O
 from src.infrastructure.vision.openai_client import get_openai_client
 
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
-VISION_MODEL = "gpt-4o"
 MAX_OUTPUT_TOKENS = 4096
 
 SYSTEM_PROMPT = (
@@ -58,7 +58,7 @@ def parse_contract_image(image_path: str) -> str:
     client = get_openai_client()
     try:
         response = client.chat.completions.create(
-            model=VISION_MODEL,
+            model=GPT4O,
             temperature=0,
             max_tokens=MAX_OUTPUT_TOKENS,
             messages=[
