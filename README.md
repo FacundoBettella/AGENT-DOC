@@ -115,7 +115,7 @@ curl -X POST http://localhost:8000/analysis \
   -F "amendment_image=@data/test_contracts/par1_servicios_simple/amendment.png"
 ```
 
-Documentación interactiva: `http://localhost:8000/docs` (Swagger UI) o `http://localhost:8000/scalar` (Scalar, UI alternativa más moderna para probar los endpoints).
+Documentación interactiva: `http://localhost:8000/scalar` (Scalar).
 Para Postman: `File → Import → Link` con `http://localhost:8000/openapi.json`, o importar directamente el archivo `openapi.json` de este repo.
 
 ### Gestión de prompts (ABM)

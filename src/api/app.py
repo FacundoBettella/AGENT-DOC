@@ -3,7 +3,7 @@ from scalar_fastapi import get_scalar_api_reference
 
 from src.api import analysis, health, prompts
 
-app = FastAPI(title="AGENT-DOC")
+app = FastAPI(title="AGENT-DOC", docs_url=None)
 
 app.include_router(health.router)
 app.include_router(analysis.router)
