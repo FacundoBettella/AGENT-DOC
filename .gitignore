@@ -7,6 +7,9 @@ venv/
 .env
 data/prompts.json
 
+# Notas de preparacion para la defensa en vivo -- nunca se pushea al repo publico
+docs/DEFENSA.md
+
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
