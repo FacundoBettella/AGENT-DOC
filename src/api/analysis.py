@@ -6,7 +6,11 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from src.application.pipeline import analyze_contract_amendment
 from src.config import MissingEnvironmentVariableError
 from src.infrastructure.agents.extraction_agent import ExtractionError
-from src.infrastructure.vision.image_parser import ImageValidationError, VisionParsingError
+from src.infrastructure.parsing.document_parser import (
+    DocumentValidationError,
+    DocxParsingError,
+    VisionParsingError,
+)
 from src.models import ContractChangeOutput
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
@@ -30,9 +34,9 @@ async def analyze(
         return analyze_contract_amendment(str(original_path), str(amendment_path))
     except MissingEnvironmentVariableError as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    except ImageValidationError as error:
+    except DocumentValidationError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    except (VisionParsingError, ExtractionError) as error:
+    except (VisionParsingError, DocxParsingError, ExtractionError) as error:
         raise HTTPException(status_code=502, detail=str(error)) from error
     finally:
         original_path.unlink(missing_ok=True)

@@ -14,7 +14,7 @@ flowchart TB
     end
 
     subgraph Infra["Infraestructura (driven adapters)"]
-        VISION["vision/<br/>image_parser.py"]
+        VISION["parsing/<br/>document_parser.py"]
         AGENTS["agents/<br/>ContextualizationAgent + ExtractionAgent"]
         PROMPTS["prompts/<br/>PromptRepository"]
         TRACE["tracing/<br/>langfuse_tracer.py"]
@@ -41,7 +41,7 @@ src/
 ├── application/
 │   └── pipeline.py             # orquesta el flujo completo + jerarquia de spans
 ├── infrastructure/
-│   ├── vision/                  # cliente OpenAI + parsing de imagenes (GPT-4o Vision)
+│   ├── parsing/                  # cliente OpenAI + parsing de imagenes (GPT-4o Vision) y de Word (python-docx)
 │   ├── agents/                   # ContextualizationAgent, ExtractionAgent
 │   ├── prompts/                    # PromptRepository (prompts editables via API)
 │   └── tracing/                     # cliente y callback handler de Langfuse
@@ -53,19 +53,20 @@ src/
 
 ## Cómo funciona el pipeline
 
-`analyze_contract_amendment()` abre un span raíz `contract-analysis` en Langfuse y ejecuta, en orden:
+`analyze_contract_amendment()` abre un span raíz `contract-analysis` en Langfuse y ejecuta:
 
 ```mermaid
 flowchart TB
     ROOT["contract-analysis (span raiz)"]
-    ROOT --> P1["parse_original_contract<br/>GPT-4o Vision"]
-    ROOT --> P2["parse_amendment_contract<br/>GPT-4o Vision"]
-    ROOT --> A1["contextualization_agent<br/>Analista Senior -- mapa estructural"]
-    ROOT --> A2["extraction_agent<br/>Auditor -- ADICION / ELIMINACION / MODIFICACION"]
+    ROOT --> P1["parse_original_contract<br/>Vision (imagen) o python-docx (Word)"]
+    ROOT --> P2["parse_amendment_contract<br/>Vision (imagen) o python-docx (Word)"]
+    P1 --> A1["contextualization_agent<br/>Analista Senior -- mapa estructural"]
+    P2 --> A1
+    A1 --> A2["extraction_agent<br/>Auditor -- ADICION / ELIMINACION / MODIFICACION"]
     A2 --> OUT["ContractChangeOutput<br/>(validado con Pydantic)"]
 ```
 
-1. **Parsing multimodal** (x2): GPT-4o Vision transcribe cada imagen fielmente (`temperature=0`, prohibido resumir o interpretar), preservando la jerarquía de cláusulas.
+1. **Parsing** (x2, en paralelo entre sí vía `ThreadPoolExecutor` — son independientes): `document_parser.py` (`infrastructure/parsing/`) despacha por extensión. Imagen (`.jpg/.jpeg/.png`) → GPT-4o Vision transcribe fielmente (`temperature=0`, prohibido resumir o interpretar), preservando la jerarquía de cláusulas. Word (`.docx`) → extracción directa de texto con `python-docx` (párrafos + celdas de tablas), sin pasar por el LLM — más rápido, más barato y sin riesgo de alucinación porque no hay transcripción de por medio.
 2. **ContextualizationAgent** (Agente 1, "Analista Legal Senior"): compara la estructura de ambos documentos y arma un mapa de correspondencias — no opina sobre qué cambió.
 3. **ExtractionAgent** (Agente 2, "Auditor Legal"): usa ese mapa + los dos textos para identificar cada cambio, distinguiendo ADICIÓN / ELIMINACIÓN / MODIFICACIÓN, y devuelve el resultado ya validado (`llm.with_structured_output(ContractChangeOutput)`).
 
