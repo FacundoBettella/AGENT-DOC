@@ -1,9 +1,17 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 
 from src.api import analysis, health, prompts
 
 app = FastAPI(title="AGENT-DOC", docs_url=None)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(health.router)
 app.include_router(analysis.router)
