@@ -18,10 +18,20 @@ Contrato de confidencialidad (NDA). La enmienda combina los tres tipos de cambio
 
 Sirve para validar que el sistema distingue correctamente los tres tipos de cambio dentro de una misma enmienda, y que la eliminación solo se marca cuando hay lenguaje explícito de derogación (no por ausencia física del texto, ver Par 1).
 
+## Par 3 — `par3_word_docx/` (mismo contenido que Par 1, en Word)
+
+Mismo contrato de prestación de servicios y misma enmienda que el Par 1 (monto y vigencia modificados), pero generado como `.docx` en vez de imagen — sirve para ejercitar el path de parsing de Word (extracción directa de texto con `python-docx`, sin pasar por GPT-4o Vision). Resultado esperado: idéntico al Par 1 (2 cambios, ambos MODIFICACION).
+
 ## Regenerar las imágenes
 
 ```
 docker compose run --rm app python data/test_contracts/generate_test_contracts.py
+```
+
+## Regenerar los documentos Word
+
+```
+docker compose run --rm app python data/test_contracts/generate_test_contract_docx.py
 ```
 
 ## Resultado esperado (verificado corriendo el pipeline real)
